@@ -1,6 +1,5 @@
 {% extends 'mailing/base.html' %}
 {% block content %}
-
     <form method="post" enctype="multipart/form-data">
         <div class="row" style="margin-top:50px">
             <div class="col-6">
@@ -11,9 +10,8 @@
                     <div class="card-body">
                         {% csrf_token %}
                         {{ form.as_p }}
-                        <button type="submit" class="btn btn-success">
-                            Войти
-                        </button>
+                        <button type="submit" class="btn btn-success">Войти</button>
+                        <a href="{% url 'users:random_password_form' %}" class="btn btn-mute"> Сброс пароля </a>
                     </div>
                 </div>
             </div>
