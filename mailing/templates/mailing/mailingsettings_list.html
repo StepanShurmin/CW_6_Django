@@ -1,0 +1,40 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+    <div style="margin-top: 50px">
+        <a type="button" class="btn btn-block btn-outline-success col-2 mb-3"
+           href="{% url 'mailing:settings_create' %}">Добавить рассылку</a>
+    </div>
+    <table class="table table-striped" style="vertical-align:middle">
+        <thead>
+{#        <tr> text-center match-height></tr>#}
+            <th>Время старта</th>
+            <th>Время окончания</th>
+            <th>Период</th>
+            <th>Статус</th>
+            <th>Сообщение</th>
+            <th></th>
+{#        </tr>#}
+        </thead>
+        <tbody class="table-group-divider">
+        {% for object in object_list %}
+            <tr>
+                <td>{{ object.start_time }}</td>
+                <td>{{ object.end_time }}</td>
+                <td>{{ object.get_period_display }}</td>
+                <td>{{ object.get_status_display }}</td>
+                <td>{{ object.message }}</td>
+
+                <td>
+                    <a type="button" class="btn btn-Warning btn-warning text-center match-height"
+                       href="{% url 'mailing:settings_edit' object.pk %}" title="Изменить"><span
+                            class="material-symbols-outlined">settings</span></a>
+                    <a type="button" class="btn btn-danger btn-warning text-center match-height"
+                       href="{% url 'mailing:mailing_settings_delete' object.pk %} }"
+                       title="Удалить"><span class="material-symbols-outlined">close</span></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
