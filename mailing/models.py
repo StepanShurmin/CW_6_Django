@@ -41,7 +41,7 @@ class MailingSettings(models.Model):
         (STATUS_DONE, 'Завершена'),
     )
 
-    start_time = models.DateTimeField(verbose_name='Время старта')
+    start_time = models.DateTimeField(verbose_name='Время старта', **NULLABLE)
     end_time = models.DateTimeField(verbose_name='Время окончания', **NULLABLE)
     period = models.CharField(max_length=20, choices=PERIODS, default=PERIOD_DAILY, verbose_name='Период')
     status = models.CharField(max_length=20, choices=STATUSES, default=STATUS_CREATED, verbose_name='Статус')
