@@ -12,7 +12,7 @@
             <th>Период</th>
             <th>Статус</th>
             <th>Сообщение</th>
-            <th>Подписчиков</th>
+{#            <th>Подписчиков</th>#}
             <th></th>
         </tr>
         </thead>
@@ -25,11 +25,11 @@
                 <td>{{ object.get_status_display }}</td>
                 <td>{{ object.message }}</td>
                 <td>
-                    {% if perms.mailing.change_mailingsettings %}
-                        <a href="{% url 'mailing:mailing_client' object.pk %}">Подписчиков: {{ object.mailingclient_set.count }}</a>
-                    {% else %}
-                        Подписчиков: {{ object.mailingclient_set.count }}
-                    {% endif %}
+{#                    {% if perms.mailing.change_mailingsettings %}#}
+{#                        <a href="{% url 'mailing:mailing_client' object.pk %}">Подписчиков: {{ object.mailingclient_set.count }}</a>#}
+{#                    {% else %}#}
+{#                        Подписчиков: {{ object.mailingclient_set.count }}#}
+{#                    {% endif %}#}
                 </td>
 
 
