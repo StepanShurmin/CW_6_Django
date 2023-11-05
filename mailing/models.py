@@ -13,7 +13,8 @@ class Client(models.Model):
     email = models.EmailField(unique=True, verbose_name='Email')
     first_name = models.CharField(max_length=100, verbose_name='Имя')
     last_name = models.CharField(max_length=100, verbose_name='Фамилия')
-    comment = models.TextField(verbose_name='Комментарий', **NULLABLE),
+    comment = models.TextField(verbose_name='Комментарий', **NULLABLE)
+
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, **NULLABLE,
                               verbose_name='Пользователь')
 
@@ -29,21 +30,25 @@ class MailingSettings(models.Model):
     PERIOD_DAILY = 'daily'
     PERIOD_WEEKLY = 'weekly'
     PERIOD_MONTHLY = 'monthly'
+
     PERIODS = (
         (PERIOD_DAILY, 'Ежедневная'),
         (PERIOD_WEEKLY, 'Раз в неделю'),
         (PERIOD_MONTHLY, 'Раз в месяц'),
     )
+
     STATUS_CREATED = 'created'
     STATUS_STARTED = 'started'
     STATUS_DONE = 'done'
+
     STATUSES = (
         (STATUS_CREATED, 'Создана'),
         (STATUS_STARTED, 'Запущена'),
         (STATUS_DONE, 'Завершена'),
     )
+
     start_time = models.DateTimeField(verbose_name='Время старта', **NULLABLE,
-                                      default=datetime.datetime.now(datetime.timezone.utc))
+                                      default=datetime.datetime.now)
     end_time = models.DateTimeField(verbose_name='Время окончания', **NULLABLE,
                                     default=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7))
     period = models.CharField(max_length=20, choices=PERIODS, default=PERIOD_DAILY, verbose_name='Период')
@@ -68,7 +73,7 @@ class MailingSettings(models.Model):
 
 class MailingMessage(models.Model):
     letter_subject = models.CharField(max_length=100, verbose_name='Тема письма')
-    letter_body = models.TextField(verbose_name='Тело письма'),
+    letter_body = models.TextField(verbose_name='Тело письма')
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, **NULLABLE,
                               verbose_name='Пользователь')
 
@@ -94,7 +99,7 @@ class MailingLog(models.Model):
     mailing_service_response = models.TextField(verbose_name='Ответ почтового сервера, если он был', **NULLABLE)
     client = models.ForeignKey('Client', on_delete=models.CASCADE, verbose_name='Клиент')
 
-    mailing = models.ForeignKey('MailingSettings', on_delete=models.CASCADE, verbose_name='Рассылка'),
+    mailing = models.ForeignKey('MailingSettings', on_delete=models.CASCADE, verbose_name='Рассылка')
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, **NULLABLE,
                               verbose_name='Пользователь')
 
@@ -108,7 +113,7 @@ class MailingLog(models.Model):
 
 class MailingClient(models.Model):
     client = models.ForeignKey('Client', on_delete=models.CASCADE, verbose_name='клиент')
-    mailing = models.ForeignKey('MailingSettings', on_delete=models.CASCADE, verbose_name='рассылка'),
+    mailing = models.ForeignKey('MailingSettings', on_delete=models.CASCADE, verbose_name='рассылка')
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, **NULLABLE,
                               verbose_name='Пользователь')
 

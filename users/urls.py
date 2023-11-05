@@ -2,7 +2,9 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
 
 from users.apps import UsersConfig
-from users.views import RegisterView, ProfileView, ActivateView, send_activate_mail_view, forget_password_view, recover_password_view
+from users.views import RegisterView, ProfileView, ActivateView, send_activate_mail_view, forget_password_view, \
+    recover_password_view
+
 app_name = UsersConfig.name
 
 urlpatterns = [

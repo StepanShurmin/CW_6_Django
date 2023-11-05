@@ -1,4 +1,4 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse
@@ -20,6 +20,7 @@ class HomePageView(TemplateView):
         context_data['mailing_blog'] = Blog.objects.all()[:3]
         context_data['title'] = 'Главная страница рассылок'
         return context_data
+
 
 class ClientListView(LoginRequiredMixin, ListView):
     model = Client
@@ -89,7 +90,7 @@ class MailingSettingsCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class MailingSettingsUpdateView(LoginRequiredMixin, UpdateView):
+class MailingSettingsUpdateView(UserPassesTestMixin, UpdateView):
     model = MailingSettings
     form_class = MailingSettingsForm
     success_url = reverse_lazy('mailing:mailing_settings_list')
@@ -107,7 +108,7 @@ class MailingSettingsUpdateView(LoginRequiredMixin, UpdateView):
 class MailingSettingsDeleteView(LoginRequiredMixin, DeleteView):
     model = MailingSettings
     success_url = reverse_lazy('mailing:mailing_settings_list')
-    permission_required = 'mailing.change_mailingsettings'
+    permission_required = 'mailing.change_mailing_settings'
 
     def get_object(self, queryset=None):
         self.object = super().get_object(queryset)
@@ -195,7 +196,6 @@ class MailingClientListView(ListView):
 
     def get_context_data(self, *args, **kwargs):
         context_data = super().get_context_data(*args, **kwargs)
-
         context_data['clients'] = Client.objects.filter(owner=self.request.user)
         context_data['mailing_pk'] = self.kwargs.get('pk')
 
