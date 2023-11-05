@@ -26,7 +26,14 @@ class MailingSettingsForm(StyleFormMixin, forms.ModelForm):
         self.fields['start_time'].widget.attrs['placeholder'] = 'дата и время'
         self.fields['end_time'].widget.attrs['placeholder'] = 'дата и время'
 
+
 class MailingMessageForm(StyleFormMixin, forms.ModelForm):
     class Meta:
         model = MailingMessage
         fields = '__all__'
+
+
+class MailingSettingsForManagerForm(StyleFormMixin, forms.ModelForm):
+    class Meta:
+        model = MailingSettings
+        fields = ('status',)

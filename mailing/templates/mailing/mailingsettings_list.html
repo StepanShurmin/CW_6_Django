@@ -1,5 +1,4 @@
 {% extends 'mailing/base.html' %}
-
 {% block content %}
     <div style="margin-top: 50px">
         <a type="button" class="btn btn-block btn-outline-success col-2 mb-3"
@@ -7,14 +6,15 @@
     </div>
     <table class="table table-striped" style="vertical-align:middle">
         <thead>
-{#        <tr> text-center match-height></tr>#}
+        <tr>
             <th>Время старта</th>
             <th>Время окончания</th>
             <th>Период</th>
             <th>Статус</th>
             <th>Сообщение</th>
+            <th>Подписчиков</th>
             <th></th>
-{#        </tr>#}
+        </tr>
         </thead>
         <tbody class="table-group-divider">
         {% for object in object_list %}
@@ -24,14 +24,24 @@
                 <td>{{ object.get_period_display }}</td>
                 <td>{{ object.get_status_display }}</td>
                 <td>{{ object.message }}</td>
+                <td>
+                    {% if perms.mailing.change_mailingsettings %}
+                        <a href="{% url 'mailing:mailing_client' object.pk %}">Подписчиков: {{ object.mailingclient_set.count }}</a>
+                    {% else %}
+                        Подписчиков: {{ object.mailingclient_set.count }}
+                    {% endif %}
+                </td>
+
 
                 <td>
                     <a type="button" class="btn btn-Warning btn-warning text-center match-height"
                        href="{% url 'mailing:settings_edit' object.pk %}" title="Изменить"><span
                             class="material-symbols-outlined">settings</span></a>
-                    <a type="button" class="btn btn-danger btn-warning text-center match-height"
-                       href="{% url 'mailing:mailing_settings_delete' object.pk %} }"
-                       title="Удалить"><span class="material-symbols-outlined">close</span></a>
+                    {% if perms.mailing.delete_mailingsettings %}
+                        <a type="button" class="btn btn-danger btn-warning text-center match-height"
+                           href="{% url 'mailing:settings_delete' object.pk %}" title="Удалить"><span
+                                class="material-symbols-outlined">close</span></a>
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}

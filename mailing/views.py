@@ -1,81 +1,168 @@
-from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import Http404
+from django.shortcuts import redirect
+from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, TemplateView, UpdateView, DeleteView, CreateView
-
-from mailing.forms import MailingMessageForm, MailingSettingsForm, ClientForm
-from mailing.models import MailingSettings, Client, MailingMessage
-
-
-def index(request):
-    return render(request, 'mailing/index.html')
+from blog.models import Blog
+from mailing.forms import MailingMessageForm, MailingSettingsForm, ClientForm, MailingSettingsForManagerForm
+from mailing.models import MailingSettings, Client, MailingMessage, MailingClient, MailingLog
 
 
-class ClientListView(ListView):
+class HomePageView(TemplateView):
+    template_name = 'mailing/home_page.html'
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data['count_mailing'] = MailingSettings.objects.all().count()
+        context_data['count_mailing_active'] = MailingSettings.objects.filter(
+            status=MailingSettings.STATUS_STARTED).count()
+        context_data['count_unique_customers'] = Client.objects.distinct().count()
+        context_data['mailing_blog'] = Blog.objects.all()[:3]
+        context_data['title'] = 'Главная страница рассылок'
+        return context_data
+
+class ClientListView(LoginRequiredMixin, ListView):
     model = Client
     template_name = 'mailing/client_list.html'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.has_perm('mailing.view_client'):
+            return queryset
+        return queryset.filter(owner=self.request.user)
 
-class ClientCreateView(CreateView):
+
+class ClientCreateView(LoginRequiredMixin, CreateView):
     model = Client
     form_class = ClientForm
     success_url = reverse_lazy('mailing:client_list')
 
+    def form_valid(self, form):
+        self.object = form.save()
+        self.object.owner = self.request.user
+        self.object.save()
+        return super().form_valid(form)
 
-class ClientUpdateView(UpdateView):
+
+class ClientUpdateView(LoginRequiredMixin, UpdateView):
     model = Client
     form_class = ClientForm
     success_url = reverse_lazy('mailing:client_list')
 
+    def get_object(self, queryset=None):
+        self.object = super().get_object(queryset)
+        if self.object.owner != self.request.user:
+            raise Http404
+        return self.object
 
-class ClientDeleteView(DeleteView):
+
+class ClientDeleteView(LoginRequiredMixin, DeleteView):
     model = Client
     success_url = reverse_lazy('mailing:client_list')
 
+    def get_object(self, queryset=None):
+        self.object = super().get_object(queryset)
+        if self.object.owner != self.request.user:
+            raise Http404
+        return self.object
 
-class MailingSettingsListView(ListView):
+
+class MailingSettingsListView(LoginRequiredMixin, ListView):
     model = MailingSettings
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.has_perm('mailing.view_mailingsettings'):
+            return queryset
+        return queryset.filter(owner=self.request.user)
 
-class MailingSettingsCreateView(CreateView):
+
+class MailingSettingsCreateView(LoginRequiredMixin, CreateView):
     model = MailingSettings
     form_class = MailingSettingsForm
     success_url = reverse_lazy('mailing:mailing_settings_list')
 
+    def form_valid(self, form):
+        self.object = form.save()
+        self.object.owner = self.request.user
+        self.object.save()
+        return super().form_valid(form)
 
-class MailingSettingsUpdateView(UpdateView):
+
+class MailingSettingsUpdateView(LoginRequiredMixin, UpdateView):
     model = MailingSettings
     form_class = MailingSettingsForm
     success_url = reverse_lazy('mailing:mailing_settings_list')
 
+    def test_func(self):
+        mailing = self.get_object()
+        user = self.request.user
+        if mailing.owner == user or user.is_superuser:
+            self.form_class = MailingSettingsForm
+        elif user.has_perm('mailing.set_status'):
+            self.form_class = MailingSettingsForManagerForm
+        return user.is_authenticated and (mailing.owner == user or user.has_perm('mailing.set_status'))
 
-class MailingSettingsDeleteView(DeleteView):
+
+class MailingSettingsDeleteView(LoginRequiredMixin, DeleteView):
     model = MailingSettings
     success_url = reverse_lazy('mailing:mailing_settings_list')
+    permission_required = 'mailing.change_mailingsettings'
+
+    def get_object(self, queryset=None):
+        self.object = super().get_object(queryset)
+        if self.object.owner != self.request.user:
+            raise Http404
+        return self.object
 
 
-class MailingMessageListView(ListView):
+class MailingMessageListView(LoginRequiredMixin, ListView):
     model = MailingMessage
     template_name = 'mailing/messages.html'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.has_perm('mailing.view_mailingmessage'):
+            return queryset
+        return super().get_queryset().filter(owner=self.request.user)
 
-class MailingMessageCreateView(CreateView):
+
+class MailingMessageCreateView(LoginRequiredMixin, CreateView):
     model = MailingMessage
     form_class = MailingMessageForm
     template_name = 'mailing/message_form.html'
-    success_url = reverse_lazy('messages')
+    success_url = reverse_lazy('mailing:messages')
+
+    def form_valid(self, form):
+        self.object = form.save()
+        self.object.owner = self.request.user
+        self.object.save()
+        return super().form_valid(form)
 
 
-class MailingMessageUpdateView(UpdateView):
+class MailingMessageUpdateView(LoginRequiredMixin, UpdateView):
     model = MailingMessage
     form_class = MailingMessageForm
     template_name = 'mailing/message_form.html'
-    success_url = reverse_lazy('messages')
+    success_url = reverse_lazy('mailing:messages')
+
+    def get_object(self, queryset=None):
+        self.object = super().get_object(queryset)
+        if self.object.owner != self.request.user:
+            raise Http404
+        return self.object
 
 
-class MailingMessageDeleteView(DeleteView):
+class MailingMessageDeleteView(LoginRequiredMixin, DeleteView):
     model = MailingMessage
     template_name = 'mailing/message_confirm_delete.html'
-    success_url = reverse_lazy('messages')
+    success_url = reverse_lazy('mailing:messages')
+
+    def get_object(self, queryset=None):
+        self.object = super().get_object(queryset)
+        if self.object.owner != self.request.user:
+            raise Http404
+        return self.object
 
 
 class ContactsTemplateView(TemplateView):
@@ -95,3 +182,49 @@ class ContactsTemplateView(TemplateView):
             message = self.request.POST.get('message')
             print(f'New message from {name}, {email}: {message}')
         return super().get_context_data(**kwargs)
+
+
+class MailingClientListView(ListView):
+    model = MailingClient
+    template_name = 'mailing/mailingclient_list.html'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.filter(mailing=self.kwargs.get('pk'))
+        return queryset
+
+    def get_context_data(self, *args, **kwargs):
+        context_data = super().get_context_data(*args, **kwargs)
+
+        context_data['clients'] = Client.objects.filter(owner=self.request.user)
+        context_data['mailing_pk'] = self.kwargs.get('pk')
+
+        return context_data
+
+
+def toggle_client(request, pk, client_pk):
+    if MailingClient.objects.filter(
+            client_id=client_pk,
+            mailing_id=pk
+    ).exists():
+        MailingClient.objects.filter(
+            client_id=client_pk,
+            mailing_id=pk
+        ).delete()
+    else:
+        MailingClient.objects.create(
+            client_id=client_pk,
+            mailing_id=pk
+        )
+
+    return redirect(reverse('mailing:mailing_client', args=[pk]))
+
+
+class MailingLogsListView(ListView):
+    model = MailingLog
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.has_perm('mailing.view_mailinglog'):
+            return queryset
+        return queryset.filter(owner=self.request.user)
